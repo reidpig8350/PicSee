@@ -1,0 +1,27 @@
+# 機密資訊
+config.py
+.env
+
+# 編譯產物
+*.pyc
+__pycache__/
+build/
+dist/
+*.egg-info/
+
+# 作業系統檔案
+.DS_Store
+Thumbs.db
+
+# IDE/編輯器檔案
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 虛擬環境
+venv/
+.venv/
+
+# 日誌檔案
+*.log
