@@ -1,6 +1,8 @@
 # 機密資訊
 config.py
 .env
+*.xlsx
+*.csv
 
 # 編譯產物
 *.pyc
