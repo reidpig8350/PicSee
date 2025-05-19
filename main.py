@@ -1,15 +1,16 @@
 import requests
 import json
 import pandas as pd
+import re  # 引入正則表達式模組
 
-def create_pics_ee_link(page_code_prefix, access_token='YOUR_ACCESS_TOKEN', proxy=None):
+def create_pics_ee_link(page_code_prefix, utm_source='PicSee', utm_medium='PicSee', utm_campaign='PicSee', access_token='YOUR_ACCESS_TOKEN', proxy=None):
     """
     使用 Pics.ee API 創建短連結。
     """
     url = 'https://api.pics.ee/v1/links'
     params = {'access_token': access_token}
     headers = {'Content-Type': 'application/json'}
-    long_url = f"https://www.cathaybk.com.tw/cathaybk/promo/event/ebanking/product/appdownload/index.html?action=page&content={page_code_prefix}"
+    long_url = f"https://www.cathaybk.com.tw/cathaybk/promo/event/ebanking/product/appdownload/index.html?action=page&content={page_code_prefix}&utm_source={utm_source}&utm_medium={utm_medium}&utm_campaign={utm_campaign}"
     deep_link = f"mymobibank://?action=page&content={page_code_prefix}"
     data = {
         "url": long_url,
@@ -59,6 +60,9 @@ def process_csv_and_create_links(csv_file_path, access_token='YOUR_ACCESS_TOKEN'
             short_url_list = []
             for index, row in df.iterrows():
                 page_code = row["CUBE App Page Code"]
+                utm_source = row.get("廣告來源", "PicSee")
+                utm_medium = row.get("廣告媒介", "PicSee")
+                utm_campaign = row.get("廣告活動", "PicSee")
                 existing_short_url = row["H"]
 
                 # 如果 "H" 欄位已有值，跳過該列
@@ -69,8 +73,14 @@ def process_csv_and_create_links(csv_file_path, access_token='YOUR_ACCESS_TOKEN'
 
                 if isinstance(page_code, str) and len(page_code) >= 6:
                     prefix = page_code[:6]
-                    short_url = create_pics_ee_link(prefix, access_token, proxy)
-                    short_url_list.append(short_url)
+                    
+                    # 使用正則表達式檢核格式：兩個英文加四個數字
+                    if re.match(r'^[A-Za-z]{2}\d{4}$', prefix):
+                        short_url = create_pics_ee_link(prefix, utm_source, utm_medium, utm_campaign, access_token, proxy)
+                        short_url_list.append(short_url)
+                    else:
+                        print(f"'{prefix}' 格式不符合要求，跳過該列 (第 {index + 2} 行)。")
+                        short_url_list.append(None)
                 else:
                     print(f"'{page_code}' 無法擷取前六個字元或不是字串 (第 {index + 2} 行)。")
                     short_url_list.append(None)
@@ -91,6 +101,7 @@ def process_csv_and_create_links(csv_file_path, access_token='YOUR_ACCESS_TOKEN'
 
 
 if __name__ == "__main__":
+    import config
     csv_file = 'deeplink.csv'  # 替換為你的 CSV 檔案名稱
-    access_token = '84a1a4dd917ad11f514bdde7165ed4ae775a52b9'  # 替換為你的 Pics.ee API 存取權杖
+    access_token = config.access_token 
     process_csv_and_create_links(csv_file, access_token)
